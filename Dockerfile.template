@@ -1,6 +1,6 @@
 FROM balenalib/raspberrypi3-debian
 
-RUN apt-get update && apt-get install -y curl wget build-essential libelf-dev awscli bc flex libssl-dev python pkg-config git hostapd libnl-3-dev libnl-genl-3-dev
+RUN apt-get update && apt-get install -y curl wget build-essential libelf-dev awscli bc flex libssl-dev python-is-python3 pkg-config git hostapd libnl-3-dev libnl-genl-3-dev
 COPY . /usr/src/app
 WORKDIR /usr/src/app
 CMD ./run.sh
