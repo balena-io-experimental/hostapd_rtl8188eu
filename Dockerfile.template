@@ -1,6 +1,15 @@
 FROM balenalib/raspberrypi3-debian
 
-RUN apt-get update && apt-get install -y curl wget build-essential libelf-dev awscli bc flex libssl-dev python-is-python3 pkg-config git hostapd libnl-3-dev libnl-genl-3-dev
+# ca-certificates is listed so it is upgraded past the version in the (deprecated)
+# base image, and python3-certifi so awscli uses the system CA bundle instead of
+# its own vendored cacert.pem. Both are needed to distrust the compromised
+# eMudhra intermediate CAs.
+RUN apt-get update && apt-get install -y curl wget build-essential libelf-dev awscli bc flex libssl-dev python-is-python3 pkg-config git hostapd libnl-3-dev libnl-genl-3-dev ca-certificates python3-certifi
+# Fail if ca-certificates predates the eMudhra CA distrust (bookworm fix: 20250419~deb12u2)
+# or if awscli is not using the system CA bundle.
+RUN . /etc/os-release && [ "$VERSION_CODENAME" = bookworm ] \
+	&& dpkg --compare-versions "$(dpkg-query -W -f='${Version}' ca-certificates)" ge 20250419~deb12u2 \
+	&& python3 -c 'from awscli.botocore.httpsession import get_cert_path; assert get_cert_path(True) == "/etc/ssl/certs/ca-certificates.crt"'
 COPY . /usr/src/app
 WORKDIR /usr/src/app
 CMD ./run.sh
